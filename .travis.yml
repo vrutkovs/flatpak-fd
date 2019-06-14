@@ -1,0 +1,34 @@
+---
+language: generic
+
+sudo: required
+
+services:
+  - docker
+
+cache:
+  directories:
+    - .flatpak-builder
+
+before_script:
+  - git clone -b gh-pages https://github.com/vrutkovs/flatpaks export/ && cp -rf export/repo . || mkdir export
+
+script:
+  - docker run --privileged -v ${PWD}:/source -i vrutkovs/flatpak:latest make -C source/
+
+before_deploy:
+  - rm -rf export && mkdir export
+  - cp -rf repo/ export/
+  - cp -rf fd.flatpakref export/
+
+notifications:
+  webhooks: https://hubot.vrutkovs.eu/travis-ci/103761953
+
+deploy:
+  provider: pages
+  local_dir: export
+  skip_cleanup: true
+  repo: vrutkovs/flatpaks
+  github_token: $GITHUB_TOKEN
+  on:
+    branch: master
